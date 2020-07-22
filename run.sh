@@ -10,7 +10,7 @@ function createPostgresConfig() {
 
 function setPostgresPassword() {
   # TODO configure password as before ! (problem = 2 users 1 password)
-    sudo -u postgres psql -c "ALTER USER renderer PASSWORD 'renderer'" -h $PGHOST -p $PGPORT
+    sudo -E -u postgres psql -c "ALTER USER renderer PASSWORD 'renderer'" -h $PGHOST -p $PGPORT
 }
 
 if [ "$#" -ne 1 ]; then
@@ -34,12 +34,12 @@ if [ "$1" = "import" ]; then
     # Initialize PostgreSQL
 #    createPostgresConfig
 #    service postgresql start
-    sudo -u postgres createuser renderer -h $PGHOST -p $PGPORT
-    sudo -u postgres createdb -E UTF8 -O renderer gis -h $PGHOST -p $PGPORT
-    sudo -u postgres psql -d gis -c "CREATE EXTENSION postgis;" -h $PGHOST -p $PGPORT
-    sudo -u postgres psql -d gis -c "CREATE EXTENSION hstore;" -h $PGHOST -p $PGPORT
-    sudo -u postgres psql -d gis -c "ALTER TABLE geometry_columns OWNER TO renderer;" -h $PGHOST -p $PGPORT
-    sudo -u postgres psql -d gis -c "ALTER TABLE spatial_ref_sys OWNER TO renderer;" -h $PGHOST -p $PGPORT
+    sudo -E -u postgres createuser renderer -h $PGHOST -p $PGPORT
+    sudo -E -u postgres createdb -E UTF8 -O renderer gis -h $PGHOST -p $PGPORT
+    sudo -E -u postgres psql -d gis -c "CREATE EXTENSION postgis;" -h $PGHOST -p $PGPORT
+    sudo -E -u postgres psql -d gis -c "CREATE EXTENSION hstore;" -h $PGHOST -p $PGPORT
+    sudo -E -u postgres psql -d gis -c "ALTER TABLE geometry_columns OWNER TO renderer;" -h $PGHOST -p $PGPORT
+    sudo -E -u postgres psql -d gis -c "ALTER TABLE spatial_ref_sys OWNER TO renderer;" -h $PGHOST -p $PGPORT
     setPostgresPassword
 
     # Download Luxembourg as sample if no data is provided
@@ -74,10 +74,10 @@ if [ "$1" = "import" ]; then
     fi
 
     # Import data
-    PGPASSWORD=renderer bash -c 'sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf ${OSM2PGSQL_EXTRA_ARGS} -h $PGHOST -p $PGPORT'
+    PGPASSWORD=renderer bash -c 'sudo -E -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf ${OSM2PGSQL_EXTRA_ARGS} -h $PGHOST -p $PGPORT'
 
     # Create indexes
-    sudo -u postgres psql -d gis -f indexes.sql -h $PGHOST -p $PGPORT
+    sudo -E -u postgres psql -d gis -f indexes.sql -h $PGHOST -p $PGPORT
 
     # Register that data has changed for mod_tile caching purposes
     touch /var/lib/mod_tile/planet-import-complete
