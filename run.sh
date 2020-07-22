@@ -9,7 +9,8 @@ function createPostgresConfig() {
 }
 
 function setPostgresPassword() {
-    sudo -u postgres psql -c "ALTER USER renderer PASSWORD '${PGPASSWORD:-renderer}'"
+  # TODO configure password as before ! (problem = 2 users 1 password)
+    sudo -u postgres psql -c "ALTER USER renderer PASSWORD 'renderer'" -h $PGHOST -p $PGPORT
 }
 
 if [ "$#" -ne 1 ]; then
@@ -25,20 +26,20 @@ fi
 
 if [ "$1" = "import" ]; then
     # Ensure that database directory is in right state
-    chown postgres:postgres -R /var/lib/postgresql
-    if [ ! -f /var/lib/postgresql/12/main/PG_VERSION ]; then
-        sudo -u postgres /usr/lib/postgresql/12/bin/pg_ctl -D /var/lib/postgresql/12/main/ initdb -o "--locale C.UTF-8"
-    fi
+#    chown postgres:postgres -R /var/lib/postgresql
+#    if [ ! -f /var/lib/postgresql/12/main/PG_VERSION ]; then
+#        sudo -u postgres /usr/lib/postgresql/12/bin/pg_ctl -D /var/lib/postgresql/12/main/ initdb -o "--locale C.UTF-8"
+#    fi
 
     # Initialize PostgreSQL
-    createPostgresConfig
-    service postgresql start
-    sudo -u postgres createuser renderer
-    sudo -u postgres createdb -E UTF8 -O renderer gis
-    sudo -u postgres psql -d gis -c "CREATE EXTENSION postgis;"
-    sudo -u postgres psql -d gis -c "CREATE EXTENSION hstore;"
-    sudo -u postgres psql -d gis -c "ALTER TABLE geometry_columns OWNER TO renderer;"
-    sudo -u postgres psql -d gis -c "ALTER TABLE spatial_ref_sys OWNER TO renderer;"
+#    createPostgresConfig
+#    service postgresql start
+    sudo -u postgres createuser renderer -h $PGHOST -p $PGPORT
+    sudo -u postgres createdb -E UTF8 -O renderer gis -h $PGHOST -p $PGPORT
+    sudo -u postgres psql -d gis -c "CREATE EXTENSION postgis;" -h $PGHOST -p $PGPORT
+    sudo -u postgres psql -d gis -c "CREATE EXTENSION hstore;" -h $PGHOST -p $PGPORT
+    sudo -u postgres psql -d gis -c "ALTER TABLE geometry_columns OWNER TO renderer;" -h $PGHOST -p $PGPORT
+    sudo -u postgres psql -d gis -c "ALTER TABLE spatial_ref_sys OWNER TO renderer;" -h $PGHOST -p $PGPORT
     setPostgresPassword
 
     # Download Luxembourg as sample if no data is provided
@@ -73,10 +74,10 @@ if [ "$1" = "import" ]; then
     fi
 
     # Import data
-    sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf ${OSM2PGSQL_EXTRA_ARGS}
+    PGPASSWORD=renderer bash -c 'sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf ${OSM2PGSQL_EXTRA_ARGS} -h $PGHOST -p $PGPORT'
 
     # Create indexes
-    sudo -u postgres psql -d gis -f indexes.sql
+    sudo -u postgres psql -d gis -f indexes.sql -h $PGHOST -p $PGPORT
 
     # Register that data has changed for mod_tile caching purposes
     touch /var/lib/mod_tile/planet-import-complete
@@ -91,7 +92,7 @@ if [ "$1" = "run" ]; then
     rm -rf /tmp/*
 
     # Fix postgres data privileges
-    chown postgres:postgres /var/lib/postgresql -R
+#    chown postgres:postgres /var/lib/postgresql -R
 
     # Configure Apache CORS
     if [ "$ALLOW_CORS" == "enabled" ] || [ "$ALLOW_CORS" == "1" ]; then
@@ -99,8 +100,8 @@ if [ "$1" = "run" ]; then
     fi
 
     # Initialize PostgreSQL and Apache
-    createPostgresConfig
-    service postgresql start
+#    createPostgresConfig
+#    service postgresql start
     service apache2 restart
     setPostgresPassword
 
