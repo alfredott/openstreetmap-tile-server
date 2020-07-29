@@ -128,9 +128,7 @@ RUN mkdir -p /home/renderer/src \
  && cd openstreetmap-carto \
  && rm -rf .git \
  && npm install -g carto@0.18.2 \
- && cat project.mml | grep -B 5 -A 5 postgis \
  && sed -i '/^    type: "postgis"/a \ \ \ \ host: "postgres"\n\ \ \ \ user: "renderer"\n\ \ \ \ password: "renderer"' project.mml \
- && cat project.mml | grep -B 5 -A 5 postgis \
  && carto project.mml > mapnik.xml \
  && scripts/get-shapefiles.py \
  && rm /home/renderer/src/openstreetmap-carto/data/*.zip
