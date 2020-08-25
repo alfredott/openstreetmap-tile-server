@@ -34,6 +34,7 @@ if [ "$1" = "import" ]; then
     # Initialize PostgreSQL
 #    createPostgresConfig
 #    service postgresql start
+    adduser --disabled-password --gecos "" postgres
     sudo -E -u postgres createuser renderer -h $PGHOST -p $PGPORT
     sudo -E -u postgres createdb -E UTF8 -O renderer gis -h $PGHOST -p $PGPORT
     sudo -E -u postgres psql -d gis -c "CREATE EXTENSION postgis;" -h $PGHOST -p $PGPORT
