@@ -10,7 +10,13 @@ function createPostgresConfig() {
 
 function setPostgresPassword() {
   # TODO configure password as before ! (problem = 2 users 1 password)
-    sudo -E -u postgres psql -c "ALTER USER renderer PASSWORD 'renderer'" -h $PGHOST -p $PGPORT
+    sudo -E -u postgres psql -c "ALTER USER renderer PASSWORD '${PASSWORD_RENDERER}'" -h $PGHOST -p $PGPORT
+}
+
+function setPasswordInStylesheet() {
+  cd /home/renderer/src/openstreetmap-carto/
+  envsubst < project.mml > project-filled.mml
+  carto project-filled.mml > mapnik.xml
 }
 
 if [ "$#" -ne 1 ]; then
@@ -34,6 +40,7 @@ if [ "$1" = "import" ]; then
     # Initialize PostgreSQL
 #    createPostgresConfig
 #    service postgresql start
+    setPasswordInStylesheet
     adduser --disabled-password --gecos "" postgres
     sudo -E -u postgres createuser renderer -h $PGHOST -p $PGPORT
     sudo -E -u postgres createdb -E UTF8 -O renderer gis -h $PGHOST -p $PGPORT
@@ -101,6 +108,7 @@ if [ "$1" = "run" ]; then
     fi
 
     # Initialize PostgreSQL and Apache
+    setPasswordInStylesheet
 #    createPostgresConfig
 #    service postgresql start
     service apache2 restart
