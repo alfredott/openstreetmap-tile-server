@@ -2,12 +2,6 @@
 
 set -x
 
-function createPostgresConfig() {
-  cp /etc/postgresql/12/main/postgresql.custom.conf.tmpl /etc/postgresql/12/main/conf.d/postgresql.custom.conf
-  sudo -u postgres echo "autovacuum = $AUTOVACUUM" >> /etc/postgresql/12/main/conf.d/postgresql.custom.conf
-  cat /etc/postgresql/12/main/conf.d/postgresql.custom.conf
-}
-
 function setPostgresPassword() {
     sudo -E -u postgres psql -c "ALTER USER renderer PASSWORD '${RENDERER_PASSWORD}'" -h $PGHOST -p $PGPORT
 }
@@ -30,15 +24,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 if [ "$1" = "import" ]; then
-    # Ensure that database directory is in right state
-#    chown postgres:postgres -R /var/lib/postgresql
-#    if [ ! -f /var/lib/postgresql/12/main/PG_VERSION ]; then
-#        sudo -u postgres /usr/lib/postgresql/12/bin/pg_ctl -D /var/lib/postgresql/12/main/ initdb -o "--locale C.UTF-8"
-#    fi
-
     # Initialize PostgreSQL
-#    createPostgresConfig
-#    service postgresql start
     setPasswordInStylesheet
     adduser --disabled-password --gecos "" postgres
     sudo -E -u postgres createuser renderer -h $PGHOST -p $PGPORT
@@ -89,17 +75,12 @@ if [ "$1" = "import" ]; then
     # Register that data has changed for mod_tile caching purposes
     touch /var/lib/mod_tile/planet-import-complete
 
-#    service postgresql stop
-
     exit 0
 fi
 
 if [ "$1" = "run" ]; then
     # Clean /tmp
     rm -rf /tmp/*
-
-    # Fix postgres data privileges
-#    chown postgres:postgres /var/lib/postgresql -R
 
     # Configure Apache CORS
     if [ "$ALLOW_CORS" == "enabled" ] || [ "$ALLOW_CORS" == "1" ]; then
@@ -108,10 +89,7 @@ if [ "$1" = "run" ]; then
 
     # Initialize PostgreSQL and Apache
     setPasswordInStylesheet
-#    createPostgresConfig
-#    service postgresql start
     service apache2 restart
-#    setPostgresPassword
 
     # Configure renderd threads
     sed -i -E "s/num_threads=[0-9]+/num_threads=${THREADS:-4}/g" /usr/local/etc/renderd.conf
@@ -130,8 +108,6 @@ if [ "$1" = "run" ]; then
     sudo -u renderer renderd -f -c /usr/local/etc/renderd.conf &
     child=$!
     wait "$child"
-
-    service postgresql stop
 
     exit 0
 fi
