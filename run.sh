@@ -48,7 +48,7 @@ if [ "$1" = "import" ]; then
     sudo -E -u postgres psql -d gis -c "CREATE EXTENSION hstore;" -h $PGHOST -p $PGPORT
     sudo -E -u postgres psql -d gis -c "ALTER TABLE geometry_columns OWNER TO renderer;" -h $PGHOST -p $PGPORT
     sudo -E -u postgres psql -d gis -c "ALTER TABLE spatial_ref_sys OWNER TO renderer;" -h $PGHOST -p $PGPORT
-    setPostgresPassword
+#    setPostgresPassword
 
     # Download Luxembourg as sample if no data is provided
     if [ ! -f /data.osm.pbf ] && [ -z "$DOWNLOAD_PBF" ]; then
@@ -112,7 +112,7 @@ if [ "$1" = "run" ]; then
 #    createPostgresConfig
 #    service postgresql start
     service apache2 restart
-    setPostgresPassword
+#    setPostgresPassword
 
     # Configure renderd threads
     sed -i -E "s/num_threads=[0-9]+/num_threads=${THREADS:-4}/g" /usr/local/etc/renderd.conf
