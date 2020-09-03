@@ -9,7 +9,6 @@ function createPostgresConfig() {
 }
 
 function setPostgresPassword() {
-  # TODO configure password as before ! (problem = 2 users 1 password)
     sudo -E -u postgres psql -c "ALTER USER renderer PASSWORD '${RENDERER_PASSWORD}'" -h $PGHOST -p $PGPORT
 }
 
