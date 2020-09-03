@@ -114,7 +114,7 @@ RUN mkdir -p /home/renderer/src \
  && cd openstreetmap-carto \
  && rm -rf .git \
  && npm install -g carto@0.18.2 \
- && sed -i '/^    type: "postgis"/a \ \ \ \ host: "postgres"\n\ \ \ \ user: "renderer"\n\ \ \ \ password: "${PASSWORD_RENDERER}"' project.mml \
+ && sed -i '/^    type: "postgis"/a \ \ \ \ host: "postgres"\n\ \ \ \ user: "renderer"\n\ \ \ \ password: "${RENDERER_PASSWORD}"' project.mml \
  && carto project.mml > mapnik.xml \
  && scripts/get-shapefiles.py \
  && rm /home/renderer/src/openstreetmap-carto/data/*.zip

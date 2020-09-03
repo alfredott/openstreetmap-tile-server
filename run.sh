@@ -10,7 +10,7 @@ function createPostgresConfig() {
 
 function setPostgresPassword() {
   # TODO configure password as before ! (problem = 2 users 1 password)
-    sudo -E -u postgres psql -c "ALTER USER renderer PASSWORD '${PASSWORD_RENDERER}'" -h $PGHOST -p $PGPORT
+    sudo -E -u postgres psql -c "ALTER USER renderer PASSWORD '${RENDERER_PASSWORD}'" -h $PGHOST -p $PGPORT
 }
 
 function setPasswordInStylesheet() {
@@ -82,7 +82,7 @@ if [ "$1" = "import" ]; then
     fi
 
     # Import data
-    PGPASSWORD=${PASSWORD_RENDERER} bash -c 'sudo -E -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf ${OSM2PGSQL_EXTRA_ARGS} -H $PGHOST -P $PGPORT'
+    PGPASSWORD=${RENDERER_PASSWORD} bash -c 'sudo -E -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf ${OSM2PGSQL_EXTRA_ARGS} -H $PGHOST -P $PGPORT'
 
     # Create indexes
     sudo -E -u postgres psql -d gis -f indexes.sql -h $PGHOST -p $PGPORT
