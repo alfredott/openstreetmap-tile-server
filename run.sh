@@ -90,7 +90,7 @@ if [ "$1" = "import" ]; then
     # Register that data has changed for mod_tile caching purposes
     touch /var/lib/mod_tile/planet-import-complete
 
-    service postgresql stop
+#    service postgresql stop
 
     exit 0
 fi
